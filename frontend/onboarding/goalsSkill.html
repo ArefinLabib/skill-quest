@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Select Your Goals & Skills</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- Navbar -->
+  <div class="navbar">
+    <div class="brand">SkillQuest</div>
+  </div>
+
+  <div class="wizard-container">
+    <!-- Step 1: Select Goals -->
+    <div id="step-goals" class="step active">
+      <div class="title">Choose Your Learning Goals</div>
+      <div id="goals-list" class="choices"></div>
+      <div class="actions">
+        <button id="next-to-skills" class="btn" disabled>Next</button>
+      </div>
+    </div>
+    <!-- Step 2: Select Skills & Proficiency -->
+    <div id="step-skills" class="step">
+      <div class="title">Choose Relevant Skills & Proficiency</div>
+      <div id="skills-list"></div>
+      <div class="actions">
+        <button id="back-to-goals" class="btn">Back</button>
+        <button id="submit-wizard" class="btn" disabled>Submit</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Placeholder goals and skill mapping (replace with API calls if needed)
+    const goals = [
+      'Graphic Design', 'Digital Marketing', 'Machine Learning', 'Cybersecurity',
+      'Mobile App Development', 'Cloud Computing', 'UI/UX Design', 'Project Management', 'Blockchain'
+    ]; // query from database
+    const skillMap = {
+      'Graphic Design': ['Photoshop', 'Illustrator', 'InDesign'],
+      'Digital Marketing': ['SEO', 'Content Writing', 'Analytics'],
+      'Machine Learning': ['Python', 'TensorFlow', 'Data Preprocessing'],
+      'Cybersecurity': ['Network Security', 'Ethical Hacking', 'Cryptography'],
+      'Mobile App Development': ['React Native', 'Flutter', 'Swift'],
+      'Cloud Computing': ['AWS', 'Azure', 'Docker'],
+      'UI/UX Design': ['Figma', 'Sketch', 'User Research'],
+      'Project Management': ['Agile', 'Scrum', 'JIRA'],
+      'Blockchain': ['Solidity', 'Smart Contracts', 'Ethereum']
+    }; // query from database after user selects goals
+
+    // State
+    const selectedGoals = new Set();
+    const selectedSkills = {};
+
+    // Elements
+    const goalsListEl = document.getElementById('goals-list');
+    const nextBtn = document.getElementById('next-to-skills');
+    const skillsListEl = document.getElementById('skills-list');
+    const backBtn = document.getElementById('back-to-goals');
+    const submitBtn = document.getElementById('submit-wizard');
+    const stepGoalsEl = document.getElementById('step-goals');
+    const stepSkillsEl = document.getElementById('step-skills');
+
+    // Render goals
+    goals.forEach(goal => {
+      const div = document.createElement('div');
+      div.className = 'choice';
+      const cb = document.createElement('input'); cb.type = 'checkbox'; cb.value = goal;
+      const lbl = document.createElement('label'); lbl.textContent = goal;
+      cb.addEventListener('change', () => {
+        if (cb.checked) {
+          selectedGoals.add(goal);
+        } else {
+          selectedGoals.delete(goal);
+        }
+        nextBtn.disabled = selectedGoals.size === 0;
+      });
+      div.append(cb, lbl);
+      goalsListEl.appendChild(div);
+    });
+
+    // Move to skills step
+    nextBtn.addEventListener('click', () => {
+      stepGoalsEl.classList.remove('active');
+      stepSkillsEl.classList.add('active');
+      renderSkills();
+    });
+
+    // Go back
+    backBtn.addEventListener('click', () => {
+      stepSkillsEl.classList.remove('active');
+      stepGoalsEl.classList.add('active');
+    });
+
+    // Render skills based on selected goals
+    function renderSkills() {
+      skillsListEl.innerHTML = '';
+      Object.keys(skillMap).forEach(goal => {
+        if (!selectedGoals.has(goal)) return;
+        const skills = skillMap[goal];
+        skills.forEach(skill => {
+          const entry = document.createElement('div');
+          entry.className = 'skill-entry';
+          const lbl = document.createElement('label'); lbl.textContent = skill;
+          const select = document.createElement('select');
+          ['Beginner','Intermediate','Advanced'].forEach(level => {
+            const opt = document.createElement('option'); opt.value = level;
+            opt.textContent = level;
+            select.appendChild(opt);
+          });
+          select.addEventListener('change', () => {
+            selectedSkills[skill] = select.value;
+            checkSubmitReady();
+          });
+          entry.append(lbl, select);
+          skillsListEl.appendChild(entry);
+        });
+      });
+    }
+
+    // Enable submit when all skills have a selection
+    function checkSubmitReady() {
+      const totalSkills = Array.from(selectedGoals).reduce((sum, g) => sum + skillMap[g].length, 0);
+      const chosenCount = Object.keys(selectedSkills).length;
+      submitBtn.disabled = chosenCount < totalSkills;
+    }
+
+    // Submit final selections
+    submitBtn.addEventListener('click', async () => {
+      const payload = {
+        goals: Array.from(selectedGoals),
+        skills: selectedSkills
+      };
+      console.log('Submitting:', payload);
+      alert('Your choices have been saved!');
+    });
+  </script>
+
+</body>
+</html>
