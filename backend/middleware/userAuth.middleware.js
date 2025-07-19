@@ -1,3 +1,5 @@
+import jwt from 'jsonwebtoken';
+
 export const validateRegister = (req, res, next) => {
     const { name, email, password } = req.body;
     if (!name || !email || !password) {
@@ -6,30 +8,24 @@ export const validateRegister = (req, res, next) => {
     next();
 };
 
-// export const validateLogin = (req, res, next) => {
-//     const { email, password, name } = req.body;
-//     if ((!email && !name) || !password) {
-//         return res.status(400).json({ message: "Email or name and password are required" });
-//     }
-//     next();
-// };
 
-// export const authenticate = async (req, res, next) => {
-//   const token = req.header('Authorization')?.split(' ')[1]; // Expecting "Bearer <token>"
-//   if (!token) {
-//     return res.status(401).json({ message: 'No token, authorization denied' });
-//   }
+export const authenticateToken = (req, res, next) => {
 
-//   try {
-//     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-//     const [users] = await db.query('SELECT id FROM Users WHERE id = ?', [decoded.id]);
-//     if (users.length === 0) {
-//       return res.status(401).json({ message: 'Invalid user' });
-//     }
-//     req.user = { id: decoded.id };
-//     next();
-//   } catch (err) {
-//     res.status(401).json({ message: 'Token is not valid' });
-//   }
-// };
+  const authHeader = req.headers['authorization'];
+  // console.log('Authorization header:', authHeader);
+  
+  if (!authHeader) return res.status(401).json({ error: 'Missing Authorization header' });
+
+  const token = authHeader.split(' ')[1];
+  if (!token) return res.status(401).json({ error: 'Malformed Authorization header' });
+  console.log('Token received:', token);
+  
+
+  jwt.verify(token, process.env.JWT_SECRET, (err, payload) => {
+    if (err) return res.status(403).json({ error: 'Invalid or expired token' });
+
+    req.user = { id: payload.sub || payload.id };
+    next();
+  });
+}
 

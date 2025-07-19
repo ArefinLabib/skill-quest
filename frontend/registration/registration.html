@@ -102,7 +102,8 @@
 
       if (!res.ok) throw new Error(data.message || 'Login failed');
       showMessage(msgEl, 'Login successful! Redirecting…', false);
-      localStorage.setItem('token', data.token);
+
+      localStorage.setItem('authToken', data.token);
       setTimeout(() => window.location.href = '/dashboard', 1000);
     } catch (err) {
       showMessage(msgEl, err.message);
@@ -126,9 +127,18 @@
         body: JSON.stringify(payload)
       });
       const data = await res.json();
+      
       if (!res.ok) throw new Error(data.message || 'Sign up failed');
-      showMessage(msgEl, 'Account created! You can now log in.', true);
-      formSignup.reset();
+      showMessage(msgEl, 'Account created!', true);
+
+      localStorage.setItem('authToken', data.token);
+      // console.log('Just stored authToken:', data.token);
+      // console.log('Read back from localStorage:', localStorage.getItem('authToken'));
+
+      // formSignup.reset();
+      setTimeout(() => {
+        window.location.href = '../onboarding/goalsSkill.html';
+      }, 2000);
     } catch (err) {
       showMessage(msgEl, err.message);
     }

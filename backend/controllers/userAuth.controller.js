@@ -6,8 +6,8 @@ export const createUser = async (req, res) => {
     const {name, email, password, } = req.body
     try {
         const [rows] = await pool.execute(
-            "SELECT * FROM users WHERE email = ?",
-            [email]
+            "SELECT * FROM users WHERE email = ? OR name = ?",
+            [email, name]
         );
         if (rows.length > 0) {
             return res.status(400).json({
@@ -20,8 +20,12 @@ export const createUser = async (req, res) => {
                 "INSERT INTO users (name, email, password_hash) VALUES (?, ?, ?)",
                 [name, email, hashedPassword]
             );
-             const userId = result.insertId;
-             const token = jwt.sign({ id: userId }, process.env.JWT_SECRET, { expiresIn: '1h' });
+            const userId = result.insertId;
+            const token = jwt.sign({ id: userId }, process.env.JWT_SECRET);
+            
+            // console.log("User created with ID:", userId);
+            // console.log("Token generated:", token);
+            
 
             // Send response
             res.status(201).json({
@@ -65,7 +69,7 @@ export const loginUser = async (req, res) => {
         name: user.name,
         email: user.email};
 
-        const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "1h" });
+        const token = jwt.sign(payload, process.env.JWT_SECRET);
         
         return res.status(200).json({
             message: "Login successful",

@@ -6,6 +6,21 @@
     <title>Select Your Goals & Skills</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
+    <!-- <style>
+        body { font-family: 'Inter', sans-serif; margin: 0; padding: 0; background: #f5f5f5; }
+        .navbar { background: #2c3e50; color: white; padding: 1rem; text-align: center; font-size: 1.5rem; font-weight: 600; }
+        .wizard-container { max-width: 800px; margin: 2rem auto; padding: 2rem; background: white; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .step { display: none; }
+        .step.active { display: block; }
+        .title { font-size: 1.8rem; font-weight: 600; margin-bottom: 1.5rem; text-align: center; }
+        .choices, .skill-entry { margin-bottom: 1rem; }
+        .choice, .skill-entry { display: flex; align-items: center; padding: 0.5rem; }
+        .choice input, .skill-entry select { margin-right: 1rem; }
+        .actions { margin-top: 2rem; text-align: right; }
+        .btn { padding: 0.75rem 1.5rem; background: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        .btn:disabled { background: #bdc3c7; cursor: not-allowed; }
+        .btn:hover:not(:disabled) { background: #2980b9; }
+    </style> -->
 </head>
 <body>
 
@@ -35,28 +50,30 @@
   </div>
 
   <script>
-    // Placeholder goals and skill mapping (replace with API calls if needed)
-    const goals = [
-      'Graphic Design', 'Digital Marketing', 'Machine Learning', 'Cybersecurity',
-      'Mobile App Development', 'Cloud Computing', 'UI/UX Design', 'Project Management', 'Blockchain'
-    ]; // query from database
-    const skillMap = {
-      'Graphic Design': ['Photoshop', 'Illustrator', 'InDesign'],
-      'Digital Marketing': ['SEO', 'Content Writing', 'Analytics'],
-      'Machine Learning': ['Python', 'TensorFlow', 'Data Preprocessing'],
-      'Cybersecurity': ['Network Security', 'Ethical Hacking', 'Cryptography'],
-      'Mobile App Development': ['React Native', 'Flutter', 'Swift'],
-      'Cloud Computing': ['AWS', 'Azure', 'Docker'],
-      'UI/UX Design': ['Figma', 'Sketch', 'User Research'],
-      'Project Management': ['Agile', 'Scrum', 'JIRA'],
-      'Blockchain': ['Solidity', 'Smart Contracts', 'Ethereum']
-    }; // query from database after user selects goals
+    const token = localStorage.getItem('authToken');
+    // console.log('Auth Token(goalskills frontend top):', token);
+    
+
+    // Data loaders
+    async function loadGoals() {
+      try {
+        const response = await fetch('http://localhost:3000/api/goals');
+        if (!response.ok) throw new Error('Network response was not ok');
+        const data = await response.json();
+        return data.goals;
+      } catch (err) {
+        console.error('Failed to load goals:', err);
+        return [];
+      }
+    }
 
     // State
+    let goals = [];
+    let skillMap = {};
     const selectedGoals = new Set();
     const selectedSkills = {};
 
-    // Elements
+    // Element references
     const goalsListEl = document.getElementById('goals-list');
     const nextBtn = document.getElementById('next-to-skills');
     const skillsListEl = document.getElementById('skills-list');
@@ -65,32 +82,67 @@
     const stepGoalsEl = document.getElementById('step-goals');
     const stepSkillsEl = document.getElementById('step-skills');
 
-    // Render goals
-    goals.forEach(goal => {
-      const div = document.createElement('div');
-      div.className = 'choice';
-      const cb = document.createElement('input'); cb.type = 'checkbox'; cb.value = goal;
-      const lbl = document.createElement('label'); lbl.textContent = goal;
-      cb.addEventListener('change', () => {
-        if (cb.checked) {
-          selectedGoals.add(goal);
-        } else {
-          selectedGoals.delete(goal);
-        }
-        nextBtn.disabled = selectedGoals.size === 0;
+    // Initialize on DOM ready
+    window.addEventListener('DOMContentLoaded', async () => {
+      goals = await loadGoals();
+      renderGoals(goals);
+    });
+
+    // Render goals list
+    function renderGoals(goalsArray) {
+      goalsListEl.innerHTML = '';
+      goalsArray.forEach(goal => {
+        const div = document.createElement('div');
+        div.className = 'choice';
+
+        const cb = document.createElement('input');
+        cb.type = 'checkbox';
+        cb.value = goal;
+
+        const lbl = document.createElement('label');
+        lbl.textContent = goal;
+
+        cb.addEventListener('change', () => {
+          if (cb.checked) selectedGoals.add(goal);
+          else selectedGoals.delete(goal);
+          nextBtn.disabled = selectedGoals.size === 0;
+        });
+
+        div.append(cb, lbl);
+        goalsListEl.appendChild(div);
       });
-      div.append(cb, lbl);
-      goalsListEl.appendChild(div);
+    }
+
+    // Navigation handlers
+    nextBtn.addEventListener('click', async () => {
+      const chosenGoals = Array.from(selectedGoals);
+      if (chosenGoals.length === 0) return;
+
+      nextBtn.textContent = 'Loading…';
+      nextBtn.disabled = true;
+
+      try {
+        const resp = await fetch('http://localhost:3000/api/skills', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ goals: chosenGoals })
+        });
+        if (!resp.ok) throw new Error(`Server error: ${resp.status}`);
+
+        skillMap = await resp.json();
+
+        stepGoalsEl.classList.remove('active');
+        stepSkillsEl.classList.add('active');
+        renderSkills();
+      } catch (err) {
+        console.error('Failed to load skills:', err);
+        alert('Could not load skills. Please try again.');
+      } finally {
+        nextBtn.textContent = 'Next';
+        nextBtn.disabled = selectedGoals.size === 0;
+      }
     });
 
-    // Move to skills step
-    nextBtn.addEventListener('click', () => {
-      stepGoalsEl.classList.remove('active');
-      stepSkillsEl.classList.add('active');
-      renderSkills();
-    });
-
-    // Go back
     backBtn.addEventListener('click', () => {
       stepSkillsEl.classList.remove('active');
       stepGoalsEl.classList.add('active');
@@ -99,44 +151,64 @@
     // Render skills based on selected goals
     function renderSkills() {
       skillsListEl.innerHTML = '';
-      Object.keys(skillMap).forEach(goal => {
-        if (!selectedGoals.has(goal)) return;
-        const skills = skillMap[goal];
+      selectedGoals.forEach(goal => {
+        const skills = skillMap[goal] || [];
         skills.forEach(skill => {
           const entry = document.createElement('div');
           entry.className = 'skill-entry';
-          const lbl = document.createElement('label'); lbl.textContent = skill;
+
+          const lbl = document.createElement('label');
+          lbl.textContent = skill;
+
           const select = document.createElement('select');
-          ['Beginner','Intermediate','Advanced'].forEach(level => {
-            const opt = document.createElement('option'); opt.value = level;
+          ['Not Selected','Beginner', 'Intermediate', 'Advanced'].forEach(level => {
+            const opt = document.createElement('option');
+            opt.value = level;
             opt.textContent = level;
             select.appendChild(opt);
           });
+
           select.addEventListener('change', () => {
             selectedSkills[skill] = select.value;
             checkSubmitReady();
           });
+
           entry.append(lbl, select);
           skillsListEl.appendChild(entry);
         });
       });
     }
 
-    // Enable submit when all skills have a selection
+    // Enable submit when ready
     function checkSubmitReady() {
-      const totalSkills = Array.from(selectedGoals).reduce((sum, g) => sum + skillMap[g].length, 0);
+      const totalSkills = Array.from(selectedGoals)
+        .reduce((sum, g) => sum + (skillMap[g] || []).length, 0);
       const chosenCount = Object.keys(selectedSkills).length;
       submitBtn.disabled = chosenCount < totalSkills;
     }
 
-    // Submit final selections
+    // Final submission
     submitBtn.addEventListener('click', async () => {
       const payload = {
         goals: Array.from(selectedGoals),
         skills: selectedSkills
       };
-      console.log('Submitting:', payload);
-      alert('Your choices have been saved!');
+      // console.log(userId, payload);
+      
+      try {
+        const resp = await fetch('http://localhost:3000/api/submit', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+           },
+          body: JSON.stringify(payload)
+        });
+        if (!resp.ok) throw new Error('Submit failed');
+        alert('Your choices have been saved!');
+      } catch (err) {
+        console.error(err);
+        alert('There was a problem saving your choices.');
+      }
     });
   </script>
 

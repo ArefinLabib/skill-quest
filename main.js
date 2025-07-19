@@ -4,6 +4,7 @@ import cors from "cors";
 
 // import userAuthRouter from "./backend/routes/userAuth.router.js";
 import userAuthRouter from "./backend/routes/userAuth.router.js";
+import goalsSkillRouter from "./backend/routes/goalsSkill.router.js";
 
 
 
@@ -13,6 +14,7 @@ app.use(express.json());
 app.use(cors());
 
 app.use("/api/auth", userAuthRouter);
+app.use("/api", goalsSkillRouter);
 // app.use("/api/profile", updateProfile);
 
 
