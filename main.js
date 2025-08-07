@@ -2,9 +2,9 @@ import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
 
-// import userAuthRouter from "./backend/routes/userAuth.router.js";
 import userAuthRouter from "./backend/routes/userAuth.router.js";
 import goalsSkillRouter from "./backend/routes/goalsSkill.router.js";
+import projectRouter from "./backend/routes/project.router.js";
 
 
 
@@ -15,6 +15,7 @@ app.use(cors());
 
 app.use("/api/auth", userAuthRouter);
 app.use("/api", goalsSkillRouter);
+app.use("/api/projects", projectRouter);
 // app.use("/api/profile", updateProfile);
 
 
@@ -25,6 +26,6 @@ app.use("/api", goalsSkillRouter);
 
 
 
-app.listen(process.env.PORT || 3000, () => {
-    console.log(`Server is running on port ${process.env.PORT || 3000}`);
+app.listen(process.env.PORT || 1648, () => {
+    console.log(`Server is running on port ${process.env.PORT || 1648}`);
 })

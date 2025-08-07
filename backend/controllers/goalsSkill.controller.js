@@ -63,8 +63,6 @@ export const saveSkills = async (req, res) => {
   // console.log('Received data:', { goals, skills });
 
   try {
-
-    // Save user goals
     if (goals.length > 0) {
       const [goalRows] = await pool.query(
         `SELECT id, name FROM goals WHERE name IN (?)`,
@@ -78,14 +76,14 @@ export const saveSkills = async (req, res) => {
         goalIdMap[row.name] = row.id;
       });
       const userGoalsValues = goals.map(goalName => [userId, goalIdMap[goalName]]);
+      console.log('User goals values:', userGoalsValues);
+      
       await pool.query(
         'INSERT INTO user_goals (user_id, goal_id) VALUES ?',
         [userGoalsValues]
       );
     }
 
-
-    // Save user skills
     if (Object.keys(skills).length > 0) {
       const skillNames = Object.keys(skills);
       const [skillRows] = await pool.execute(

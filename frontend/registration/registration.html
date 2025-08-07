@@ -87,7 +87,7 @@
       password: document.getElementById('login-password').value
     };
     try {
-      const res = await fetch('http://localhost:3000/api/auth/login', {
+      const res = await fetch('http://localhost:1648/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -104,7 +104,7 @@
       showMessage(msgEl, 'Login successful! Redirecting…', false);
 
       localStorage.setItem('authToken', data.token);
-      setTimeout(() => window.location.href = '/dashboard', 1000);
+      setTimeout(() => window.location.href = '../home/home.html', 1000);
     } catch (err) {
       showMessage(msgEl, err.message);
     }
@@ -121,7 +121,7 @@
       password: document.getElementById('signup-password').value,
     };
     try {
-      const res = await fetch('http://localhost:3000/api/auth/register', {
+      const res = await fetch('http://localhost:1648/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)

@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SkillQuest</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="home.css">
+
+</head>
+<body>
+
+  <div class="navbar">
+    <div class="logo">SkillQuest</div>
+    <div class="nav-links">
+        <a href="/profile">Profile</a>
+        <a href="/projects">Browse Projects</a>
+        <a href="#" id="logoutBtn">Logout</a>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="section-title">Recommended Projects for You</div>
+    <div class="project-list" id="projectList">
+      <!-- Recommended projects will be injected here -->
+    </div>
+  </div>
+
+  <script>
+    const projectList = document.getElementById('projectList');
+
+    const fetchRecommendations = async () => {
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        window.location.href = '../registration/registration.html'; // Redirect if not logged in
+        return;
+      }
+
+      try {
+        const res = await fetch('http://localhost:1648/api/projects/recommendations', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        const { recommendations } = await res.json();
+
+        if (!Array.isArray(recommendations)) throw new Error("Invalid response format");
+
+        recommendations.forEach(project => {
+          const card = document.createElement('div');
+          card.className = 'project-card';
+
+          card.innerHTML = `
+            <div class="project-title">${project.name}</div>
+            <div class="project-description">${project.description}</div>
+          `;
+
+          projectList.appendChild(card);
+        });
+
+      } catch (err) {
+        projectList.innerHTML = `<div style="color: red;">Failed to load recommendations: ${err.message}</div>`;
+      }
+    };
+
+    fetchRecommendations();
+
+    document.getElementById('logoutBtn').addEventListener('click', e => {
+        e.preventDefault();
+        localStorage.removeItem('authToken'); // Delete token
+        window.location.href = '../registration/registration.html';  // Redirect to login
+    });
+
+  </script>
+
+</body>
+</html>
