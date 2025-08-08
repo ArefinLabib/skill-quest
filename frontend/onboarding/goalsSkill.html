@@ -42,7 +42,7 @@
     // Data loaders
     async function loadGoals() {
       try {
-        const response = await fetch('http://localhost:1648/api/goals');
+        const response = await fetch('http://localhost:3000/api/goals');
         if (!response.ok) throw new Error('Network response was not ok');
         const data = await response.json();
         return data.goals;
@@ -107,7 +107,7 @@
       nextBtn.disabled = true;
 
       try {
-        const resp = await fetch('http://localhost:1648/api/skills', {
+        const resp = await fetch('http://localhost:3000/api/skills', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ goals: chosenGoals })
@@ -181,7 +181,7 @@
       // console.log(userId, payload);
       
       try {
-        const resp = await fetch('http://localhost:1648/api/submit', {
+        const resp = await fetch('http://localhost:3000/api/submit', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`
@@ -189,7 +189,9 @@
           body: JSON.stringify(payload)
         });
         if (!resp.ok) throw new Error('Submit failed');
-        alert('Your choices have been saved!');
+        setTimeout(() => {
+        window.location.href = '../home/home.html';
+      }, 2000);
       } catch (err) {
         console.error(err);
         alert('There was a problem saving your choices.');

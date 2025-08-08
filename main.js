@@ -26,6 +26,6 @@ app.use("/api/projects", projectRouter);
 
 
 
-app.listen(process.env.PORT || 1648, () => {
-    console.log(`Server is running on port ${process.env.PORT || 1648}`);
+app.listen(process.env.PORT || 3000, () => {
+    console.log(`Server is running on port ${process.env.PORT || 3000}`);
 })

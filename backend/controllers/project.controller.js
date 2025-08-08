@@ -13,10 +13,11 @@ export const getRecommendations = async (req, res) => {
         'SELECT skill_id, level FROM user_skills WHERE user_id = ?',
         [userId]
         );
-        const userSkillMap = userSkills.reduce((map, row) => {
-        map[row.skill_id] = row.level;
-        return map;
-        }, {});
+
+        const userSkillMap = {};
+        for (let i = 0; i < userSkills.length; i++) {
+            userSkillMap[userSkills[i].skill_id] = userSkills[i].level;
+        }
 
         // Step 3: Find projects related to user goals via skills
         const [projectCandidates] = await pool.query(
@@ -50,7 +51,7 @@ export const getRecommendations = async (req, res) => {
             isSuitable = false;
             break;
             }
-            score += userLevel - skill.required_level + 1; // Bonus for exceeding requirement
+            score += userLevel - skill.required_level + 1; 
         }
 
         if (isSuitable) {

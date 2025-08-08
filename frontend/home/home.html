@@ -22,7 +22,7 @@
   <div class="container">
     <div class="section-title">Recommended Projects for You</div>
     <div class="project-list" id="projectList">
-      <!-- Recommended projects will be injected here -->
+
     </div>
   </div>
 
@@ -32,20 +32,18 @@
     const fetchRecommendations = async () => {
       const token = localStorage.getItem('authToken');
       if (!token) {
-        window.location.href = '../registration/registration.html'; // Redirect if not logged in
+        window.location.href = '../registration/registration.html'; 
         return;
       }
 
       try {
-        const res = await fetch('http://localhost:1648/api/projects/recommendations', {
+        const res = await fetch('http://localhost:3000/api/projects/recommendations', {
           headers: {
             'Authorization': `Bearer ${token}`
           }
         });
 
         const { recommendations } = await res.json();
-
-        if (!Array.isArray(recommendations)) throw new Error("Invalid response format");
 
         recommendations.forEach(project => {
           const card = document.createElement('div');
@@ -68,8 +66,8 @@
 
     document.getElementById('logoutBtn').addEventListener('click', e => {
         e.preventDefault();
-        localStorage.removeItem('authToken'); // Delete token
-        window.location.href = '../registration/registration.html';  // Redirect to login
+        localStorage.removeItem('authToken'); 
+        window.location.href = '../registration/registration.html'; 
     });
 
   </script>
