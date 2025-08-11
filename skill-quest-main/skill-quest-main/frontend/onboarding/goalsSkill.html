@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Select Your Goals & Skills</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- Navbar -->
+  <div class="navbar">
+    <div class="brand">SkillQuest</div>
+  </div>
+
+  <div class="wizard-container">
+    <!-- Step 1: Select Goals -->
+    <div id="step-goals" class="step active">
+      <div class="title">Choose Your Learning Goals</div>
+      <div id="goals-list" class="choices"></div>
+      <div class="actions">
+        <button id="next-to-skills" class="btn" disabled>Next</button>
+      </div>
+    </div>
+    <!-- Step 2: Select Skills & Proficiency -->
+    <div id="step-skills" class="step">
+      <div class="title">Choose Relevant Skills & Proficiency</div>
+      <div id="skills-list"></div>
+      <div class="actions">
+        <button id="back-to-goals" class="btn">Back</button>
+        <button id="submit-wizard" class="btn" disabled>Submit</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const token = localStorage.getItem('authToken');
+    // console.log('Auth Token(goalskills frontend top):', token);
+    
+
+    // Data loaders
+    async function loadGoals() {
+      try {
+        const response = await fetch('http://localhost:3000/api/goals');
+        if (!response.ok) throw new Error('Network response was not ok');
+        const data = await response.json();
+        return data.goals;
+      } catch (err) {
+        console.error('Failed to load goals:', err);
+        return [];
+      }
+    }
+
+    // State
+    let goals = [];
+    let skillMap = {};
+    const selectedGoals = new Set();
+    const selectedSkills = {};
+
+    // Element references
+    const goalsListEl = document.getElementById('goals-list');
+    const nextBtn = document.getElementById('next-to-skills');
+    const skillsListEl = document.getElementById('skills-list');
+    const backBtn = document.getElementById('back-to-goals');
+    const submitBtn = document.getElementById('submit-wizard');
+    const stepGoalsEl = document.getElementById('step-goals');
+    const stepSkillsEl = document.getElementById('step-skills');
+
+    // Initialize on DOM ready
+    window.addEventListener('DOMContentLoaded', async () => {
+      goals = await loadGoals();
+      renderGoals(goals);
+    });
+
+    // Render goals list
+    function renderGoals(goalsArray) {
+      goalsListEl.innerHTML = '';
+      goalsArray.forEach(goal => {
+        const div = document.createElement('div');
+        div.className = 'choice';
+
+        const cb = document.createElement('input');
+        cb.type = 'checkbox';
+        cb.value = goal;
+
+        const lbl = document.createElement('label');
+        lbl.textContent = goal;
+
+        cb.addEventListener('change', () => {
+          if (cb.checked) selectedGoals.add(goal);
+          else selectedGoals.delete(goal);
+          nextBtn.disabled = selectedGoals.size === 0;
+        });
+
+        div.append(cb, lbl);
+        goalsListEl.appendChild(div);
+      });
+    }
+
+    // Navigation handlers
+    nextBtn.addEventListener('click', async () => {
+      const chosenGoals = Array.from(selectedGoals);
+      if (chosenGoals.length === 0) return;
+
+      nextBtn.textContent = 'Loading…';
+      nextBtn.disabled = true;
+
+      try {
+        const resp = await fetch('http://localhost:3000/api/skills', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ goals: chosenGoals })
+        });
+        if (!resp.ok) throw new Error(`Server error: ${resp.status}`);
+
+        skillMap = await resp.json();
+
+        stepGoalsEl.classList.remove('active');
+        stepSkillsEl.classList.add('active');
+        renderSkills();
+      } catch (err) {
+        console.error('Failed to load skills:', err);
+        alert('Could not load skills. Please try again.');
+      } finally {
+        nextBtn.textContent = 'Next';
+        nextBtn.disabled = selectedGoals.size === 0;
+      }
+    });
+
+    backBtn.addEventListener('click', () => {
+      stepSkillsEl.classList.remove('active');
+      stepGoalsEl.classList.add('active');
+    });
+
+    // Render skills based on selected goals
+    function renderSkills() {
+      skillsListEl.innerHTML = '';
+      selectedGoals.forEach(goal => {
+        const skills = skillMap[goal] || [];
+        skills.forEach(skill => {
+          const entry = document.createElement('div');
+          entry.className = 'skill-entry';
+
+          const lbl = document.createElement('label');
+          lbl.textContent = skill;
+
+          const select = document.createElement('select');
+          ['Not Selected','Beginner', 'Intermediate', 'Advanced'].forEach(level => {
+            const opt = document.createElement('option');
+            opt.value = level;
+            opt.textContent = level;
+            select.appendChild(opt);
+          });
+
+          select.addEventListener('change', () => {
+            selectedSkills[skill] = select.value;
+            checkSubmitReady();
+          });
+
+          entry.append(lbl, select);
+          skillsListEl.appendChild(entry);
+        });
+      });
+    }
+
+    // Enable submit when ready
+    function checkSubmitReady() {
+      const totalSkills = Array.from(selectedGoals)
+        .reduce((sum, g) => sum + (skillMap[g] || []).length, 0);
+      const chosenCount = Object.keys(selectedSkills).length;
+      submitBtn.disabled = chosenCount < totalSkills;
+    }
+
+    // Final submission
+    submitBtn.addEventListener('click', async () => {
+      const payload = {
+        goals: Array.from(selectedGoals),
+        skills: selectedSkills
+      };
+      // console.log(userId, payload);
+      
+      try {
+        const resp = await fetch('http://localhost:3000/api/submit', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+           },
+          body: JSON.stringify(payload)
+        });
+        if (!resp.ok) throw new Error('Submit failed');
+        setTimeout(() => {
+        window.location.href = '../home/home.html';
+      }, 2000);
+      } catch (err) {
+        console.error(err);
+        alert('There was a problem saving your choices.');
+      }
+    });
+  </script>
+
+</body>
+</html>
