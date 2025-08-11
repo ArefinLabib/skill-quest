@@ -3,7 +3,7 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 
 export const createUser = async (req, res) => {
-    const {name, email, password, } = req.body
+    const {name, email, password, role } = req.body
     try {
         const [rows] = await pool.execute(
             "SELECT * FROM users WHERE email = ? OR name = ?",
@@ -17,11 +17,11 @@ export const createUser = async (req, res) => {
             const hashedPassword = await bcrypt.hash(password, 10);
 
             const [result] = await pool.execute(
-                "INSERT INTO users (name, email, password_hash) VALUES (?, ?, ?)",
-                [name, email, hashedPassword]
+                "INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, ?)",
+                [name, email, hashedPassword, role]
             );
             const userId = result.insertId;
-            const token = jwt.sign({ id: userId }, process.env.JWT_SECRET);
+            const token = jwt.sign({ id: userId, role: req.body.role }, process.env.JWT_SECRET);
             
             // console.log("User created with ID:", userId);
             // console.log("Token generated:", token);
@@ -34,6 +34,7 @@ export const createUser = async (req, res) => {
                 id: userId,
                 name,
                 email,
+                role
             },
             });
         }

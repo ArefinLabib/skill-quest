@@ -6,14 +6,13 @@
   <title>SkillQuest</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="home.css">
-
 </head>
 <body>
 
   <div class="navbar">
     <div class="logo">SkillQuest</div>
     <div class="nav-links">
-        <a href="/profile">Profile</a>
+        <a href="#" id="profileBtn">Profile</a>
         <a href="/projects">Browse Projects</a>
         <a href="#" id="logoutBtn">Logout</a>
     </div>
@@ -21,9 +20,7 @@
 
   <div class="container">
     <div class="section-title">Recommended Projects for You</div>
-    <div class="project-list" id="projectList">
-
-    </div>
+    <div class="project-list" id="projectList"></div>
   </div>
 
   <script>
@@ -64,12 +61,23 @@
 
     fetchRecommendations();
 
-    document.getElementById('logoutBtn').addEventListener('click', e => {
-        e.preventDefault();
-        localStorage.removeItem('authToken'); 
-        window.location.href = '../registration/registration.html'; 
+    // Go to profile page
+    document.getElementById('profileBtn').addEventListener('click', e => {
+      e.preventDefault();
+      const token = localStorage.getItem('authToken');
+      if (!token) {
+        window.location.href = '../registration/registration.html';
+      } else {
+        window.location.href = '../Student-Profile/student_profile.html'; // Change path if needed
+      }
     });
 
+    // Logout
+    document.getElementById('logoutBtn').addEventListener('click', e => {
+      e.preventDefault();
+      localStorage.removeItem('authToken'); 
+      window.location.href = '../registration/registration.html'; 
+    });
   </script>
 
 </body>

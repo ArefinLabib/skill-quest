@@ -8,14 +8,10 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-
-  <!-- Navbar -->
   <div class="navbar">
     <div class="brand">SkillQuest</div>
   </div>
-
   <div class="wizard-container">
-    <!-- Step 1: Select Goals -->
     <div id="step-goals" class="step active">
       <div class="title">Choose Your Learning Goals</div>
       <div id="goals-list" class="choices"></div>
@@ -23,7 +19,6 @@
         <button id="next-to-skills" class="btn" disabled>Next</button>
       </div>
     </div>
-    <!-- Step 2: Select Skills & Proficiency -->
     <div id="step-skills" class="step">
       <div class="title">Choose Relevant Skills & Proficiency</div>
       <div id="skills-list"></div>
@@ -33,32 +28,27 @@
       </div>
     </div>
   </div>
-
   <script>
     const token = localStorage.getItem('authToken');
-    // console.log('Auth Token(goalskills frontend top):', token);
-    
+    console.log('Auth Token:', token);
 
-    // Data loaders
     async function loadGoals() {
       try {
         const response = await fetch('http://localhost:3000/api/goals');
         if (!response.ok) throw new Error('Network response was not ok');
         const data = await response.json();
-        return data.goals;
+        return data.goals || []; // FIX: Handle empty or undefined response
       } catch (err) {
         console.error('Failed to load goals:', err);
         return [];
       }
     }
 
-    // State
     let goals = [];
     let skillMap = {};
     const selectedGoals = new Set();
     const selectedSkills = {};
 
-    // Element references
     const goalsListEl = document.getElementById('goals-list');
     const nextBtn = document.getElementById('next-to-skills');
     const skillsListEl = document.getElementById('skills-list');
@@ -67,13 +57,16 @@
     const stepGoalsEl = document.getElementById('step-goals');
     const stepSkillsEl = document.getElementById('step-skills');
 
-    // Initialize on DOM ready
     window.addEventListener('DOMContentLoaded', async () => {
       goals = await loadGoals();
-      renderGoals(goals);
+      if (goals.length === 0) {
+        console.error('No goals available');
+        alert('No goals available. Please contact support.'); // FIX: Handle empty goals
+      } else {
+        renderGoals(goals);
+      }
     });
 
-    // Render goals list
     function renderGoals(goalsArray) {
       goalsListEl.innerHTML = '';
       goalsArray.forEach(goal => {
@@ -83,6 +76,7 @@
         const cb = document.createElement('input');
         cb.type = 'checkbox';
         cb.value = goal;
+        cb.dataset.goal = goal; // FIX: Store goal name for reference
 
         const lbl = document.createElement('label');
         lbl.textContent = goal;
@@ -98,7 +92,6 @@
       });
     }
 
-    // Navigation handlers
     nextBtn.addEventListener('click', async () => {
       const chosenGoals = Array.from(selectedGoals);
       if (chosenGoals.length === 0) return;
@@ -115,13 +108,16 @@
         if (!resp.ok) throw new Error(`Server error: ${resp.status}`);
 
         skillMap = await resp.json();
+        if (Object.keys(skillMap).length === 0) {
+          throw new Error('No skills found for selected goals'); // FIX: Handle empty skillMap
+        }
 
         stepGoalsEl.classList.remove('active');
         stepSkillsEl.classList.add('active');
         renderSkills();
       } catch (err) {
         console.error('Failed to load skills:', err);
-        alert('Could not load skills. Please try again.');
+        alert(`Could not load skills: ${err.message}`);
       } finally {
         nextBtn.textContent = 'Next';
         nextBtn.disabled = selectedGoals.size === 0;
@@ -133,11 +129,13 @@
       stepGoalsEl.classList.add('active');
     });
 
-    // Render skills based on selected goals
     function renderSkills() {
       skillsListEl.innerHTML = '';
       selectedGoals.forEach(goal => {
         const skills = skillMap[goal] || [];
+        if (skills.length === 0) {
+          console.warn(`No skills for goal: ${goal}`); // FIX: Log warning for empty skills
+        }
         skills.forEach(skill => {
           const entry = document.createElement('div');
           entry.className = 'skill-entry';
@@ -146,7 +144,7 @@
           lbl.textContent = skill;
 
           const select = document.createElement('select');
-          ['Not Selected','Beginner', 'Intermediate', 'Advanced'].forEach(level => {
+          ['Not Selected', 'Beginner', 'Intermediate', 'Advanced'].forEach(level => {
             const opt = document.createElement('option');
             opt.value = level;
             opt.textContent = level;
@@ -164,40 +162,40 @@
       });
     }
 
-    // Enable submit when ready
     function checkSubmitReady() {
       const totalSkills = Array.from(selectedGoals)
         .reduce((sum, g) => sum + (skillMap[g] || []).length, 0);
-      const chosenCount = Object.keys(selectedSkills).length;
+      const chosenCount = Object.keys(selectedSkills).filter(s => selectedSkills[s] !== 'Not Selected').length; // FIX: Ignore 'Not Selected'
       submitBtn.disabled = chosenCount < totalSkills;
     }
 
-    // Final submission
     submitBtn.addEventListener('click', async () => {
       const payload = {
         goals: Array.from(selectedGoals),
-        skills: selectedSkills
+        skills: Object.fromEntries(
+          Object.entries(selectedSkills).filter(([_, level]) => level !== 'Not Selected') // FIX: Filter out 'Not Selected'
+        )
       };
-      // console.log(userId, payload);
-      
+      console.log('Submit payload:', payload);
+
       try {
         const resp = await fetch('http://localhost:3000/api/submit', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json',
+          headers: { 
+            'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`
-           },
+          },
           body: JSON.stringify(payload)
         });
-        if (!resp.ok) throw new Error('Submit failed');
+        if (!resp.ok) throw new Error(await resp.text());
         setTimeout(() => {
-        window.location.href = '../home/home.html';
-      }, 2000);
+          window.location.href = '../home/home.html';
+        }, 2000);
       } catch (err) {
-        console.error(err);
-        alert('There was a problem saving your choices.');
+        console.error('Submit error:', err);
+        alert(`There was a problem saving your choices: ${err.message}`);
       }
     });
   </script>
-
 </body>
 </html>

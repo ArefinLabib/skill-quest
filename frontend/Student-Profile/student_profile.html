@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Student Profile - SkillQuest</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Inter', sans-serif;
+      background-color: #000;
+      color: white;
+    }
+
+    /* Navbar */
+    nav {
+      background-color: purple;
+      padding: 15px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    nav .logo {
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: white;
+    }
+    nav button {
+      background-color: #ff4d4d;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 5px;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    nav button:hover {
+      background-color: #e60000;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 30px auto;
+      padding: 20px;
+    }
+
+    h1, h2 {
+      color: #bb86fc;
+    }
+
+    ul {
+      list-style-type: none;
+      padding: 0;
+    }
+
+    li {
+      background: #1a1a1a;
+      padding: 10px;
+      margin-bottom: 8px;
+      border-radius: 5px;
+    }
+
+    strong {
+      color: #bb86fc;
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <div class="logo">SkillQuest</div>
+    <button id="logout-btn">Logout</button>
+  </nav>
+
+  <div class="container">
+    <h1>Welcome, <span id="user-name"></span>!</h1>
+
+    <h2>Your Goals</h2>
+    <ul id="goals-list"><li>Loading goals...</li></ul>
+
+    <h2>Your Skills</h2>
+    <ul id="skills-list"><li>Loading skills...</li></ul>
+
+    <h2>Your Projects</h2>
+    <ul id="projects-list"><li>Loading projects...</li></ul>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", async () => {
+      const token = localStorage.getItem("authToken");
+      if (!token) {
+        window.location.href = "../registration/registration.html";
+        return;
+      }
+
+      try {
+        const res = await fetch("http://localhost:3000/api/profile/student/me", {
+          headers: { "Authorization": `Bearer ${token}` }
+        });
+
+        if (!res.ok) throw new Error("Failed to fetch profile");
+        const data = await res.json();
+
+        // Name
+        document.getElementById("user-name").textContent = data.name || "Student";
+
+        // Goals
+        const goalsList = document.getElementById("goals-list");
+        if (data.goals && data.goals.length > 0) {
+          goalsList.innerHTML = data.goals.map(goal => `<li>${goal.name}</li>`).join("");
+        } else {
+          goalsList.innerHTML = "<li>No goals set yet.</li>";
+        }
+
+        // Skills
+        const skillsList = document.getElementById("skills-list");
+        if (data.skills && data.skills.length > 0) {
+          skillsList.innerHTML = data.skills
+            .map(skill => `<li>${skill.name} - Level ${skill.level}</li>`)
+            .join("");
+        } else {
+          skillsList.innerHTML = "<li>No skills added yet.</li>";
+        }
+
+        // Projects
+        const projectsList = document.getElementById("projects-list");
+        if (data.projects && data.projects.length > 0) {
+          projectsList.innerHTML = data.projects
+            .map(project => `
+              <li>
+                <strong>${project.name}</strong> - ${project.status}
+                ${project.completion_date ? `(Completed on ${project.completion_date})` : ""}
+              </li>
+            `)
+            .join("");
+        } else {
+          projectsList.innerHTML = "<li>No projects yet.</li>";
+        }
+
+      } catch (err) {
+        console.error(err);
+        alert("Error loading profile");
+      }
+    });
+
+    // Logout button
+    document.getElementById("logout-btn").addEventListener("click", () => {
+      localStorage.removeItem("authToken");
+      window.location.href = "../registrations/registration.html";
+    });
+  </script>
+
+</body>
+</html>

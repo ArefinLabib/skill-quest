@@ -117,6 +117,54 @@
       color: #333;
     }
     
+    /* Style the label to match the rest */
+    label {
+      font-size: 0.9rem;
+      color: white;
+      margin-bottom: 5px;
+      display: block;
+    }
+
+    /* Custom select container */
+    .custom-select select {
+      width: 100%;
+      padding: 10px;
+      background-color: #1a1a1a; /* black panel background */
+      color: white;
+      border: 1px solid #6c63ff; /* purple border */
+      border-radius: 6px;
+      font-size: 0.95rem;
+      appearance: none; /* remove default arrow styling */
+      outline: none;
+      cursor: pointer;
+      transition: border 0.3s, box-shadow 0.3s;
+    }
+
+    /* Hover and focus styles */
+    .custom-select select:hover {
+      border-color: #8f85ff;
+    }
+
+    .custom-select select:focus {
+      box-shadow: 0 0 0 2px rgba(140, 130, 255, 0.4);
+    }
+
+    /* Custom arrow using background image (optional) */
+    .custom-select {
+      position: relative;
+    }
+
+    .custom-select::after {
+      content: "▼";
+      position: absolute;
+      top: 50%;
+      right: 12px;
+      transform: translateY(-50%);
+      color: #b3b3b3;
+      pointer-events: none;
+      font-size: 0.8rem;
+    }
+
 
 
     @media (max-width: 768px) {

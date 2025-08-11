@@ -5,7 +5,8 @@ import cors from "cors";
 import userAuthRouter from "./backend/routes/userAuth.router.js";
 import goalsSkillRouter from "./backend/routes/goalsSkill.router.js";
 import projectRouter from "./backend/routes/project.router.js";
-
+import profileRouter from "./backend/routes/profile.router.js";
+import userProjectsRouter from "./backend/routes/userProjects.router.js";
 
 
 dotenv.config();
@@ -16,8 +17,8 @@ app.use(cors());
 app.use("/api/auth", userAuthRouter);
 app.use("/api", goalsSkillRouter);
 app.use("/api/projects", projectRouter);
-// app.use("/api/profile", updateProfile);
-
+app.use("/api/profile", profileRouter);
+app.use("/api/projects", userProjectsRouter);
 
 
 
