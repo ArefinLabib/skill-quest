@@ -28,6 +28,8 @@
       </div>
     </div>
   </div>
+
+
   <script>
     const token = localStorage.getItem('authToken');
     console.log('Auth Token:', token);
@@ -76,16 +78,27 @@
         const cb = document.createElement('input');
         cb.type = 'checkbox';
         cb.value = goal;
-        cb.dataset.goal = goal; // FIX: Store goal name for reference
+        cb.dataset.goal = goal; 
 
         const lbl = document.createElement('label');
         lbl.textContent = goal;
 
         cb.addEventListener('change', () => {
-          if (cb.checked) selectedGoals.add(goal);
-          else selectedGoals.delete(goal);
-          nextBtn.disabled = selectedGoals.size === 0;
+          if (cb.checked) {
+            if (selectedGoals.size >= 3) {
+              alert("You can only select up to 3 goals.");
+              cb.checked = false; // undo the check
+              return;
+            }
+            selectedGoals.add(goal);
+          } else {
+            selectedGoals.delete(goal);
+          }
+
+          // Enable next only if between 2 and 3 goals are chosen
+          nextBtn.disabled = !(selectedGoals.size >= 1 && selectedGoals.size <= 3);
         });
+
 
         div.append(cb, lbl);
         goalsListEl.appendChild(div);
