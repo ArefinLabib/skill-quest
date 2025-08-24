@@ -7,7 +7,7 @@ import goalsSkillRouter from "./backend/routes/goalsSkill.router.js";
 import projectRouter from "./backend/routes/project.router.js";
 import profileRouter from "./backend/routes/profile.router.js";
 import userProjectsRouter from "./backend/routes/userProjects.router.js";
-
+import dashboardRouter from "./backend/routes/dashboard.router.js";
 
 dotenv.config();
 export const app = express();
@@ -19,6 +19,7 @@ app.use("/api", goalsSkillRouter);
 app.use("/api/projects", projectRouter);
 app.use("/api/profile", profileRouter);
 app.use("/api/projects", userProjectsRouter);
+app.use("/api/user", dashboardRouter);
 
 
 

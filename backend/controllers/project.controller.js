@@ -127,3 +127,33 @@ export const getUserProjects = async (req, res) => {
         res.status(500).json({ message: "Server error" });
     }
 };
+
+export const markProjectComplete = async (req, res) => {
+  const userId = req.user.id;
+  const { projectId } = req.params;
+
+  try {
+    // Ensure the user is enrolled in the project
+    const [rows] = await pool.execute(
+      "SELECT * FROM user_projects WHERE user_id = ? AND project_id = ?",
+      [userId, projectId]
+    );
+
+    if (rows.length === 0) {
+      return res.status(400).json({ message: "User not enrolled in this project" });
+    }
+
+    // Update status to completed
+    await pool.execute(
+      `UPDATE user_projects
+       SET status = 'completed', completion_date = CURDATE()
+       WHERE user_id = ? AND project_id = ?`,
+      [userId, projectId]
+    );
+
+    res.json({ message: "Project marked as complete", projectId });
+  } catch (err) {
+    console.error("Error marking project complete:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};

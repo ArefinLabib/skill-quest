@@ -75,3 +75,34 @@ CREATE TABLE goal_skills (
     FOREIGN KEY (goal_id) REFERENCES goals(id) ON DELETE CASCADE ON UPDATE CASCADE,
     FOREIGN KEY (skill_id) REFERENCES skills(id) ON DELETE CASCADE ON UPDATE CASCADE
 );
+
+
+
+CREATE TABLE user_activity (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT NOT NULL,
+  action VARCHAR(100) NOT NULL,
+  project_id INT NULL,
+  module_id INT NULL,
+  metadata JSON NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  INDEX (user_id, created_at),
+  INDEX (action)
+);
+
+CREATE TABLE user_xp (
+  user_id INT PRIMARY KEY,
+  xp_total INT NOT NULL DEFAULT 0,
+  level INT NOT NULL DEFAULT 1,
+  last_level_up_at TIMESTAMP NULL,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE user_streaks (
+  user_id INT PRIMARY KEY,
+  current_streak INT NOT NULL DEFAULT 0,
+  best_streak INT NOT NULL DEFAULT 0,
+  last_active_date DATE NULL,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
