@@ -113,7 +113,7 @@ export const getUserProjects = async (req, res) => {
     const userId = req.user.id;
 
     try {
-        const [projects] = await pool.execute(   // ⚡ changed db → pool
+        const [projects] = await pool.execute(  
             `SELECT p.id, p.name, p.description, p.difficulty, up.status, up.start_date, up.completion_date
              FROM user_projects up
              JOIN projects p ON up.project_id = p.id
@@ -157,3 +157,22 @@ export const markProjectComplete = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
+export const getAllProjects = async (req, res) => {
+    try {
+        const [projects] = await pool.execute(
+            `SELECT p.id AS project_id, p.name AS project_name, p.description, p.difficulty, g.id AS goal_id, g.name AS goal_name
+                FROM 
+                projects p
+                LEFT JOIN 
+                project_goals pg ON p.id = pg.project_id
+                LEFT JOIN 
+                goals g ON pg.goal_id = g.id`)
+            console.log(projects);
+            
+        res.json({projects});
+    } catch (error) {
+        console.error("Error fetching projects:", error);
+        res.status(500).json({ error: "Failed to fetch projects" });
+    }
+}
